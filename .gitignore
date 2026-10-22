@@ -1,0 +1,10 @@
+node_modules/
+dist/
+dist-cloud/
+.vite/
+.env
+.env.local
+*.local
+.DS_Store
+Thumbs.db
+_research/
