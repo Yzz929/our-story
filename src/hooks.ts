@@ -34,12 +34,11 @@ export function useNow(interval = 1000): Date {
 /** 滚动进入视口时给元素加 .is-in（配合 [data-reveal] 的 CSS） */
 export function useReveal(deps: unknown[] = []): void {
   useEffect(() => {
-    const nodes = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]:not(.is-in)'));
-    if (!nodes.length) return;
     if (!('IntersectionObserver' in window)) {
-      nodes.forEach((n) => n.classList.add('is-in'));
+      document.querySelectorAll<HTMLElement>('[data-reveal]').forEach((n) => n.classList.add('is-in'));
       return;
     }
+
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -51,8 +50,21 @@ export function useReveal(deps: unknown[] = []): void {
       },
       { rootMargin: '0px 0px -8% 0px', threshold: 0.08 }
     );
-    nodes.forEach((n) => io.observe(n));
-    return () => io.disconnect();
+
+    const observeNew = () => {
+      document.querySelectorAll<HTMLElement>('[data-reveal]:not(.is-in)').forEach((n) => io.observe(n));
+    };
+    observeNew();
+
+    // 组件可能在挂载后才出现（比如过了口令页、云端加载完成后才渲染整站），
+    // 用 MutationObserver 把后来出现的元素也纳进来，避免整页停在 opacity:0
+    const mo = new MutationObserver(observeNew);
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      io.disconnect();
+      mo.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }

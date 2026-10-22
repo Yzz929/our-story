@@ -1,11 +1,11 @@
-// 口令页验收：错误口令 → 仍需口令；正确口令 → 进入站点；刷新不再询问
+﻿// 口令页验收：错误口令 → 仍需口令；正确口令 → 进入站点；刷新不再询问
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 
 const EDGE = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 const PORT = 9111;
 const PROFILE = 'D:\\DSH\\AI-Projects\\_research\\edge-cdp-gate';
-const APP = 'http://127.0.0.1:5188/';
+const APP = process.env.APP_URL || 'http://127.0.0.1:5188/';
 
 fs.rmSync(PROFILE, { recursive: true, force: true });
 const proc = spawn(EDGE, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run',
@@ -94,3 +94,4 @@ out.errors = errors.slice(0, 5);
 console.log(JSON.stringify(out, null, 2));
 ws.close();
 proc.kill();
+

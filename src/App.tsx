@@ -62,7 +62,9 @@ export default function App() {
     return () => window.clearTimeout(id);
   }, [data]);
 
-  useReveal([data, route]);
+  // 注意：unlocked / booting 变化会重新挂载整个站点，观察器必须跟着重新绑定，
+  // 否则解锁后所有 data-reveal 元素会一直停在 opacity:0（整页空白）
+  useReveal([data, route, unlocked, booting]);
 
   // Ctrl / Cmd + E 直接进编辑页
   useEffect(() => {
