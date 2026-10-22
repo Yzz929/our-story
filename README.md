@@ -101,6 +101,19 @@ npm run dev
 
 把照片放进 `public/photos/`，支持 jpg / png / webp / svg。现在的 8 张 `p1.svg ~ p8.svg` 是占位图（柔焦渐变），可以直接删掉换成真照片，路径对上就行。
 
+## 背景音乐
+
+把音频文件放进项目根目录的 `background_music/`，然后 `npm run build`（`prebuild` 会自动跑 `scripts/sync-music.mjs`）：
+
+- 支持 `mp3 / m4a / aac / ogg / wav / flac`
+- 复制到 `public/music/`，并生成 `src/data/music.json` 曲目清单
+- 进入站点后**随机播放**，一轮放完再重洗；右下角圆形按钮点一下静音，再点恢复，静音状态会记住
+- 播放是在「点进去看看」的同一个手势里启动的，所以 iOS Safari 也能直接出声
+
+> ⚠️ 网易云的 `.ncm` 是加密缓存格式，浏览器放不了，需要先转成 mp3/flac 再放进来（脚本会跳过并提示）。
+> 建议用 **mp3 192kbps**，一首约 5–7MB；flac 一首 30MB 左右，手机上很费流量。
+> 源码 `background_music/_源文件/` 和不压缩的 flac 不会提交进仓库。
+
 ## 构建与部署
 
 ```bash
