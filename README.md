@@ -24,16 +24,22 @@ npm run dev
 1. 打开 <https://supabase.com>，用 GitHub 登录，New project（Region 选 Singapore，密码随便设一个记住）
 2. 进 SQL Editor，把 [`supabase/setup.sql`](supabase/setup.sql) 整段粘进去执行
 3. Project Settings → API，复制 **Project URL** 和 **anon public** 两个值
-4. 项目根目录建一个 `.env`（可以参考 `.env.example`）：
+4. 填进 [`src/data/cloud-config.json`](src/data/cloud-config.json)：
 
-   ```bash
-   VITE_SUPABASE_URL=https://xxxx.supabase.co
-   VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
+   ```json
+   {
+     "url": "https://xxxx.supabase.co",
+     "anonKey": "eyJhbGciOi...",
+     "table": "site",
+     "bucket": "photos"
+   }
    ```
+
+   （也可以写进 `.env` 的 `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`，会覆盖这个文件）
 
 5. `npm run build` 重新构建、部署。之后手机和电脑都能写了。
 
-> anon key 是公开可读的 key，放在前端是 Supabase 的标准用法。代价是：拿到站点链接的人理论上也能调用写入接口。个人小站够用；不放心的话，把网址只发给她，别公开转发。
+> 这个配置文件是提交进仓库的：anon key 本来就是公开 key，放在前端是 Supabase 的标准用法。**不要**把 `service_role` key 填进来。
 
 ### 1）网页编辑器（不配云端也能用）
 
