@@ -1,0 +1,12 @@
+{
+  "tracks": [
+    {
+      "src": "music/track-01.mp3",
+      "title": "Christina Perri - A Thousand Years"
+    },
+    {
+      "src": "music/track-02.mp3",
+      "title": "Shane Filan - Beautiful In White (Demo)"
+    }
+  ]
+}

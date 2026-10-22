@@ -8,3 +8,12 @@ dist-cloud/
 .DS_Store
 Thumbs.db
 _research/
+
+# éŸ³ä¹æºæ–‡ä»¶ï¼ˆæ— æŸï¼‰ä¸æäº¤ï¼Œåªæäº¤è½¬å¥½çš„ mp3
+background_music/_æºæ–‡ä»¶/
+background_music/*.flac
+background_music/*.wav
+
+# ÓÉ scripts/sync-music.mjs Éú³É£¬¹¹½¨Ê±×Ô¶¯ÖØ½¨
+public/music/
+

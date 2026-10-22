@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { kickMusic } from '../lib/audioBus';
 import { Heart } from './Icons';
 
 export interface GateConfig {
@@ -34,6 +35,8 @@ export function Gate({
     e.preventDefault();
     if (value.trim() === config.password) {
       localStorage.setItem(STORAGE_KEY, config.password);
+      // 必须在点击手势里同步开始播放，iOS Safari 才允许出声
+      kickMusic();
       setLeaving(true);
       window.setTimeout(onUnlock, 520);
     } else {

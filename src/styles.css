@@ -1770,6 +1770,183 @@ a {
 }
 
 /* ============================================================
+   背景音乐按钮
+   ============================================================ */
+.music {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 46;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-direction: row-reverse;
+}
+
+.music-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--plate);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  color: var(--ink-soft);
+  box-shadow: var(--shadow-sm);
+  transition: color 0.3s var(--ease), transform 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+
+.music-btn:hover {
+  color: var(--rose);
+  border-color: var(--rose);
+  transform: translateY(-2px);
+}
+
+.music-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.music.is-playing .music-btn {
+  color: var(--rose-deep);
+  border-color: color-mix(in srgb, var(--rose) 45%, transparent);
+}
+
+.music-bars {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5px;
+  height: 12px;
+  padding: 2px 3px;
+  border-radius: 6px;
+  background: var(--rose);
+}
+
+.music-bars i {
+  width: 2px;
+  background: #fff;
+  border-radius: 1px;
+  animation: musicBar 0.9s ease-in-out infinite;
+}
+
+.music-bars i:nth-child(1) {
+  height: 5px;
+  animation-delay: 0s;
+}
+
+.music-bars i:nth-child(2) {
+  height: 8px;
+  animation-delay: 0.15s;
+}
+
+.music-bars i:nth-child(3) {
+  height: 4px;
+  animation-delay: 0.3s;
+}
+
+@keyframes musicBar {
+  0%,
+  100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.music-title {
+  max-width: 180px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--plate);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  font-size: 11px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0;
+  transform: translateX(6px);
+  pointer-events: none;
+  transition: opacity 0.35s var(--ease), transform 0.35s var(--ease);
+}
+
+.music:hover .music-title {
+  opacity: 1;
+  transform: none;
+}
+
+/* 口令页/加载中时把按钮藏起来，但音频元素仍然挂着，方便在手势里开播 */
+.music.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+}
+
+.music {
+  transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+}
+
+/* ============================================================
+   手机端左侧悬浮跳转（桌面隐藏）
+   ============================================================ */
+.side-rail {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .side-rail {
+    position: fixed;
+    left: 7px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 46;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 5px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--plate);
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .side-rail-btn {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--ink-mute);
+    transition: background 0.3s var(--ease), color 0.3s var(--ease);
+  }
+
+  .side-rail-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .side-rail-btn.is-active {
+    background: var(--rose-soft);
+    color: var(--rose-deep);
+  }
+
+  .side-rail-btn:active {
+    transform: scale(0.94);
+  }
+}
+
+/* ============================================================
    启动占位（等云端数据时）
    ============================================================ */
 .boot {
@@ -1813,8 +1990,11 @@ a {
 }
 
 @media (max-width: 640px) {
+  /* 给左侧悬浮跳转条留出一条窄走廊，内容整体右移一点 */
   body {
     font-size: 15px;
+    padding-left: 46px;
+    padding-right: 4px;
   }
 
   .nav-inner {
@@ -1831,7 +2011,12 @@ a {
   }
 
   .hero-plate {
-    padding: 26px 18px 22px;
+    padding: 26px 14px 22px;
+  }
+
+  .hero-title {
+    font-size: clamp(24px, 7.2vw, 32px);
+    letter-spacing: 0.01em;
   }
 
   .eyebrow {
@@ -1848,29 +2033,66 @@ a {
     background: linear-gradient(174deg, var(--hero-left) 0%, var(--hero-mid) 34%, var(--hero-right) 34.5%, var(--bg) 100%);
   }
 
+  /* 手机上也保持「他 - 心 - 她」横排，跟电脑端一致，只是整体缩小 */
   .couple {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    justify-items: center;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 2px;
+    max-width: 100%;
+    align-items: center;
   }
 
   .person,
   .person-boy,
   .person-girl {
-    justify-content: center;
-    text-align: left;
-    width: 100%;
-    max-width: 260px;
-    padding: 6px 10px;
+    padding: 4px;
+    gap: 7px;
+    max-width: none;
+    width: auto;
   }
 
-  /* 手机上两个人都改成「头像在左、名字在右」，整组居中 */
-  .person-girl .person-avatar {
-    order: -1;
+  .person-boy {
+    justify-content: flex-end;
+    text-align: right;
   }
 
-  .person-girl .person-meta {
+  .person-girl {
+    justify-content: flex-start;
     text-align: left;
+  }
+
+  .person-avatar {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .person-role {
+    font-size: 8px;
+    letter-spacing: 0.18em;
+  }
+
+  .person-name {
+    font-size: 14.5px;
+  }
+
+  .person-tag {
+    font-size: 10px;
+    max-width: 84px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .heart-badge {
+    width: 34px;
+    height: 34px;
+  }
+
+  .counter {
+    margin-top: 20px;
+  }
+
+  .unit-num {
+    font-size: 26px;
   }
 
   .heart-badge {

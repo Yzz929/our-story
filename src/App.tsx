@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { loadData, saveData } from './data/store';
 import { cloudEnabled, fetchCloudSite } from './data/cloud';
 import type { SiteData } from './data/types';
@@ -16,10 +17,15 @@ import { Footer } from './components/Footer';
 import { Editor } from './components/Editor';
 import { Gate, gateNeeded } from './components/Gate';
 import type { GateConfig } from './components/Gate';
+import { MusicPlayer } from './components/MusicPlayer';
+import type { Track } from './components/MusicPlayer';
+import { SideRail } from './components/SideRail';
 import gateConfigJson from './data/cloud-config.json';
+import musicJson from './data/music.json';
 import { Heart } from './components/Icons';
 
 const gateConfig = (gateConfigJson as { gate?: GateConfig }).gate;
+const musicTracks = (musicJson as { tracks?: Track[] }).tracks ?? [];
 
 export default function App() {
   const [data, setData] = useState<SiteData>(() => loadData());
@@ -102,8 +108,12 @@ export default function App() {
   }, [title]);
 
   // 输口令之前，什么都不放出来
-  if (!unlocked) {
-    return (
+  const gateLocked = !unlocked;
+  const editing = !gateLocked && !booting && route.startsWith('/edit');
+
+  let view: ReactNode;
+  if (gateLocked) {
+    view = (
       <Gate
         config={{
           title: gateConfig?.title ?? '故事的开始',
@@ -116,72 +126,72 @@ export default function App() {
         onUnlock={() => setUnlocked(true)}
       />
     );
-  }
-
-  if (booting) {
-    return (
+  } else if (booting) {
+    view = (
       <div className="boot">
         <Heart />
         <span>正在打开我们的故事…</span>
       </div>
     );
-  }
-
-  if (route.startsWith('/edit')) {
-    return (
+  } else if (editing) {
+    view = <Editor data={data} onChange={setData} onToast={showToast} cloudReady={cloudReady} />;
+  } else {
+    view = (
       <>
-        <Editor data={data} onChange={setData} onToast={showToast} cloudReady={cloudReady} />
-        {toastEl}
+        <Nav title={title} theme={theme} onToggleTheme={toggleTheme} />
+        <SideRail />
+        <Hero data={data} now={now} title={title} highlight={highlight} />
+
+        <section className="section" id="moments">
+          <div className="container">
+            <div className="section-head" data-reveal>
+              <p className="eyebrow">OUR MOMENTS</p>
+              <h2 className="section-title">点点滴滴</h2>
+              <p className="section-desc">从第一天到现在，那些被认真记住的瞬间。</p>
+            </div>
+            <Timeline
+              milestones={data.milestones}
+              startDate={data.couple.startDate}
+              onPhoto={(src, caption) => setLightbox({ items: [{ id: 'single', src, caption }], index: 0 })}
+            />
+          </div>
+        </section>
+
+        <section className="section" id="gallery">
+          <div className="container">
+            <div className="section-head" data-reveal>
+              <p className="eyebrow">PHOTO WALL</p>
+              <h2 className="section-title">我们的照片</h2>
+              <p className="section-desc">点开可以放大看。</p>
+            </div>
+            <Gallery items={data.gallery} onOpen={(index) => setLightbox({ items: data.gallery, index })} />
+          </div>
+        </section>
+
+        <section className="section" id="anniversaries">
+          <div className="container">
+            <div className="section-head" data-reveal>
+              <p className="eyebrow">SPECIAL DAYS</p>
+              <h2 className="section-title">纪念日</h2>
+              <p className="section-desc">提前记住，才不会错过。</p>
+            </div>
+            <Anniversaries items={data.anniversaries} now={now} />
+          </div>
+        </section>
+
+        <Quote quotes={data.quotes} />
+        <Footer data={data} now={now} />
+
+        {lightbox && <Lightbox state={lightbox} onClose={() => setLightbox(null)} />}
       </>
     );
   }
 
   return (
     <>
-      <Nav title={title} theme={theme} onToggleTheme={toggleTheme} />
-      <Hero data={data} now={now} title={title} highlight={highlight} />
-
-      <section className="section" id="moments">
-        <div className="container">
-          <div className="section-head" data-reveal>
-            <p className="eyebrow">OUR MOMENTS</p>
-            <h2 className="section-title">点点滴滴</h2>
-            <p className="section-desc">从第一天到现在，那些被认真记住的瞬间。</p>
-          </div>
-          <Timeline
-            milestones={data.milestones}
-            startDate={data.couple.startDate}
-            onPhoto={(src, caption) => setLightbox({ items: [{ id: 'single', src, caption }], index: 0 })}
-          />
-        </div>
-      </section>
-
-      <section className="section" id="gallery">
-        <div className="container">
-          <div className="section-head" data-reveal>
-            <p className="eyebrow">PHOTO WALL</p>
-            <h2 className="section-title">我们的照片</h2>
-            <p className="section-desc">点开可以放大看。</p>
-          </div>
-          <Gallery items={data.gallery} onOpen={(index) => setLightbox({ items: data.gallery, index })} />
-        </div>
-      </section>
-
-      <section className="section" id="anniversaries">
-        <div className="container">
-          <div className="section-head" data-reveal>
-            <p className="eyebrow">SPECIAL DAYS</p>
-            <h2 className="section-title">纪念日</h2>
-            <p className="section-desc">提前记住，才不会错过。</p>
-          </div>
-          <Anniversaries items={data.anniversaries} now={now} />
-        </div>
-      </section>
-
-      <Quote quotes={data.quotes} />
-      <Footer data={data} now={now} />
-
-      {lightbox && <Lightbox state={lightbox} onClose={() => setLightbox(null)} />}
+      {view}
+      {/* 音乐一直挂着（口令页时只是把按钮藏起来），这样点「进去看看」的手势里就能同步开播 */}
+      <MusicPlayer tracks={musicTracks} visible={!gateLocked && !booting} />
       {toastEl}
     </>
   );
