@@ -88,6 +88,11 @@ export default function App() {
 
   const toastEl = <div className={`toast ${toast ? 'show' : ''}`}>{toast}</div>;
 
+  // 浏览器标签标题也显示「我们的一百六十五天」，分享出去更好看
+  useEffect(() => {
+    document.title = title;
+  }, [title]);
+
   if (booting) {
     return (
       <div className="boot">
