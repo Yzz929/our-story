@@ -152,6 +152,8 @@ export default function App() {
             <Timeline
               milestones={data.milestones}
               startDate={data.couple.startDate}
+              boy={data.couple.boy}
+              girl={data.couple.girl}
               onPhoto={(src, caption) => setLightbox({ items: [{ id: 'single', src, caption }], index: 0 })}
             />
           </div>

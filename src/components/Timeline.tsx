@@ -5,10 +5,21 @@ import type { Milestone } from '../data/types';
 interface Props {
   milestones: Milestone[];
   startDate: string;
+  boy: string;
+  girl: string;
   onPhoto: (src: string, caption: string) => void;
 }
 
-export function Timeline({ milestones, startDate, onPhoto }: Props) {
+/** 作者小徽章：@小豭 / @小谢 */
+function Author({ name, author }: { name: string; author: 'boy' | 'girl' }) {
+  return (
+    <span className={`tl-author tl-author-${author}`} title={`${name} 写的`}>
+      <i aria-hidden="true">{name.replace(/^(小|阿|老|大)/, '').slice(0, 1) || name.slice(0, 1)}</i>@{name}
+    </span>
+  );
+}
+
+export function Timeline({ milestones, startDate, boy, girl, onPhoto }: Props) {
   if (!milestones.length) {
     return (
       <p className="hint" style={{ textAlign: 'center' }}>
@@ -30,6 +41,8 @@ export function Timeline({ milestones, startDate, onPhoto }: Props) {
                   {fmtShort(m.date)} · {weekday(m.date)}
                 </span>
                 {day > 0 && <span className="tl-day">第 {day} 天</span>}
+                {m.author === 'boy' && <Author name={boy} author="boy" />}
+                {m.author === 'girl' && <Author name={girl} author="girl" />}
                 {m.tag && <span className="tl-tag">{m.tag}</span>}
               </div>
               <h3 className="tl-title">{m.title}</h3>

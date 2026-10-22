@@ -68,7 +68,7 @@ npm run dev
   "version": 1,
   "couple": { "boy": "阿远", "girl": "小雨", "startDate": "2026-07-15", "...": "..." },
   "milestones": [
-    { "id": "m1", "date": "2026-07-15", "title": "第一次见面", "text": "……", "tag": "初见", "photos": ["photos/p1.svg"] }
+    { "id": "m1", "date": "2026-07-15", "title": "第一次见面", "text": "……", "tag": "初见", "author": "boy", "photos": ["photos/p1.svg"] }
   ],
   "anniversaries": [ { "id": "a1", "date": "2026-07-15", "title": "在一起纪念日", "icon": "💞", "note": "……" } ],
   "gallery": [ { "id": "g1", "src": "photos/p1.svg", "caption": "那天" } ],
@@ -77,6 +77,7 @@ npm run dev
 ```
 
 - `date` 一律 `YYYY-MM-DD`
+- `author` 是「谁写的」：`"boy"` 显示 @男方名字，`"girl"` 显示 @女方名字，不填就不显示
 - 图片路径写 `photos/xxx.jpg`，对应的文件放在 `public/photos/`
 - 改了内容记得把 `version` 加 1（否则浏览器里存的旧数据会盖住新内容）
 

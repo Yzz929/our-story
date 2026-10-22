@@ -37,6 +37,8 @@ export interface Milestone {
   tag?: string;
   /** 图片地址列表：本地相对路径写成 photos/xxx.jpg，云端是完整 URL */
   photos?: string[];
+  /** 这条是谁写的：boy = 小豭，girl = 小谢 */
+  author?: 'boy' | 'girl';
 }
 
 export interface Anniversary {

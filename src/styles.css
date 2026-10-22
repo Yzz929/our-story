@@ -38,6 +38,9 @@
   --hero-wash: #503441;
   --hero-glow: #c9a7a3;
   --hero-right: #fdf6f1;
+  --author-girl-bg: rgba(157, 131, 198, 0.16);
+  --author-girl-ink: #6f579b;
+  --rail-bg: rgba(255, 255, 255, 0.42);
 }
 
 :root[data-theme="dark"] {
@@ -64,6 +67,9 @@
   --hero-wash: #2a1e2a;
   --hero-glow: #3a2a35;
   --hero-right: #191219;
+  --author-girl-bg: rgba(189, 166, 224, 0.16);
+  --author-girl-ink: #cbb4ee;
+  --rail-bg: rgba(255, 255, 255, 0.06);
 }
 
 * {
@@ -1895,6 +1901,80 @@ a {
   transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
 }
 
+/* 作者徽章：谁写的这条回忆 */
+.tl-author {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px 1px 2px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  background: var(--rose-soft);
+  color: var(--rose-deep);
+  white-space: nowrap;
+}
+
+.tl-author i {
+  width: 15px;
+  height: 15px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-style: normal;
+  font-size: 9px;
+  line-height: 1;
+  color: #fff;
+  background: linear-gradient(145deg, var(--rose), var(--rose-deep));
+}
+
+.tl-author-girl {
+  background: var(--author-girl-bg);
+  color: var(--author-girl-ink);
+}
+
+.tl-author-girl i {
+  background: linear-gradient(145deg, var(--lilac), var(--author-girl-ink));
+}
+
+/* 编辑页的作者选择 */
+.author-pills {
+  display: inline-flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.author-pills button {
+  padding: 3px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: transparent;
+  font-size: 12px;
+  color: var(--ink-soft);
+  transition: all 0.25s var(--ease);
+}
+
+.author-pills button:hover {
+  border-color: var(--rose);
+  color: var(--rose-deep);
+}
+
+.author-pills button.on {
+  background: var(--rose-soft);
+  border-color: transparent;
+  color: var(--rose-deep);
+}
+
+.me-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: -6px 0 14px;
+  font-size: 11.5px;
+  color: var(--ink-mute);
+}
+
 /* ============================================================
    手机端左侧悬浮跳转（桌面隐藏）
    ============================================================ */
@@ -1903,27 +1983,36 @@ a {
 }
 
 @media (max-width: 640px) {
+  /* 贴在屏幕左边缘的窄条：半透明、不占布局，只占 34px 视觉宽度 */
   .side-rail {
     position: fixed;
-    left: 7px;
+    left: 0;
     top: 50%;
     transform: translateY(-50%);
     z-index: 46;
     display: flex;
     flex-direction: column;
-    gap: 3px;
-    padding: 5px;
-    border-radius: 999px;
+    gap: 2px;
+    padding: 5px 4px 5px 2px;
+    border-radius: 0 999px 999px 0;
     border: 1px solid var(--line);
-    background: var(--plate);
-    backdrop-filter: blur(18px) saturate(1.2);
-    -webkit-backdrop-filter: blur(18px) saturate(1.2);
-    box-shadow: var(--shadow-sm);
+    border-left: 0;
+    background: var(--rail-bg);
+    backdrop-filter: blur(14px) saturate(1.15);
+    -webkit-backdrop-filter: blur(14px) saturate(1.15);
+    box-shadow: 0 6px 18px rgba(92, 58, 70, 0.06);
+    opacity: 0.9;
+    transition: opacity 0.3s var(--ease);
+  }
+
+  .side-rail:active,
+  .side-rail:hover {
+    opacity: 1;
   }
 
   .side-rail-btn {
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
     display: grid;
     place-items: center;
     border-radius: 50%;
@@ -1932,8 +2021,8 @@ a {
   }
 
   .side-rail-btn svg {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
   }
 
   .side-rail-btn.is-active {
@@ -1942,7 +2031,7 @@ a {
   }
 
   .side-rail-btn:active {
-    transform: scale(0.94);
+    transform: scale(0.92);
   }
 }
 
@@ -1990,11 +2079,11 @@ a {
 }
 
 @media (max-width: 640px) {
-  /* 给左侧悬浮跳转条留出一条窄走廊，内容整体右移一点 */
+  /* 只给贴边的窄条留一点点空隙，不再把整页往右挤 */
   body {
     font-size: 15px;
-    padding-left: 46px;
-    padding-right: 4px;
+    padding-left: 10px;
+    padding-right: 0;
   }
 
   .nav-inner {
@@ -2107,9 +2196,9 @@ a {
     order: 3;
   }
 
-  /* 时间轴改成左侧单列 */
+  /* 时间轴改成左侧单列；整体右移一点，避开贴边的悬浮跳转条 */
   .timeline::before {
-    left: 9px;
+    left: 22px;
   }
 
   .tl-item,
@@ -2117,12 +2206,12 @@ a {
   .tl-item:nth-child(even) {
     width: 100%;
     margin: 0 0 18px;
-    padding-left: 34px;
+    padding-left: 46px;
   }
 
   .tl-item:nth-child(odd) .tl-dot,
   .tl-item:nth-child(even) .tl-dot {
-    left: 4px;
+    left: 17px;
     right: auto;
     top: 24px;
   }

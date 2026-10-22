@@ -88,8 +88,56 @@ interface Props {
   cloudReady?: boolean;
 }
 
+/** 作者选择：两个小胶囊，再点一次可以取消 */
+function AuthorPills({
+  value,
+  boy,
+  girl,
+  onChange,
+}: {
+  value?: 'boy' | 'girl';
+  boy: string;
+  girl: string;
+  onChange: (next?: 'boy' | 'girl') => void;
+}) {
+  return (
+    <div className="author-pills">
+      <button
+        type="button"
+        className={value === 'boy' ? 'on' : ''}
+        onClick={() => onChange(value === 'boy' ? undefined : 'boy')}
+      >
+        {boy}
+      </button>
+      <button
+        type="button"
+        className={value === 'girl' ? 'on' : ''}
+        onClick={() => onChange(value === 'girl' ? undefined : 'girl')}
+      >
+        {girl}
+      </button>
+    </div>
+  );
+}
+
 export function Editor({ data, onChange, onToast, cloudReady = true }: Props) {
   const { couple, milestones, gallery, anniversaries, quotes } = data;
+
+  // 这台设备是谁在用（记在本机），新建记录默认算在 TA 名下
+  const [me, setMe] = useState<'boy' | 'girl' | null>(() => {
+    try {
+      const v = localStorage.getItem('our-story:me');
+      return v === 'boy' || v === 'girl' ? v : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (me) localStorage.setItem('our-story:me', me);
+    } catch {}
+  }, [me]);
 
   const patch = (p: Partial<SiteData>) => onChange({ ...data, ...p });
   const patchCouple = (p: Partial<Couple>) => patch({ couple: { ...couple, ...p } });
@@ -114,6 +162,7 @@ export function Editor({ data, onChange, onToast, cloudReady = true }: Props) {
       text: '',
       tag: '',
       photos: [],
+      author: me ?? undefined,
     };
     patch({ milestones: [...milestones, m] });
   };
@@ -331,6 +380,11 @@ export function Editor({ data, onChange, onToast, cloudReady = true }: Props) {
               <Plus /> 添加
             </button>
           </div>
+          <div className="me-row">
+            <span>我是</span>
+            <AuthorPills value={me ?? undefined} boy={couple.boy} girl={couple.girl} onChange={(v) => setMe(v ?? null)} />
+            <span>新建的记录会默认记在 TA 名下</span>
+          </div>
           {milestones.map((m, i) => (
             <div className="editor-item" key={m.id}>
               <div className="editor-item-head">
@@ -386,9 +440,18 @@ export function Editor({ data, onChange, onToast, cloudReady = true }: Props) {
                   />
                 </div>
                 <div className="field">
-                  <label>照片</label>
-                  <Thumbs photos={m.photos ?? []} onChange={(next) => setMilestone(m.id, { photos: next })} />
+                  <label>谁写的（前端会显示 @名字）</label>
+                  <AuthorPills
+                    value={m.author}
+                    boy={couple.boy}
+                    girl={couple.girl}
+                    onChange={(next) => setMilestone(m.id, { author: next })}
+                  />
                 </div>
+              </div>
+              <div className="field">
+                <label>照片</label>
+                <Thumbs photos={m.photos ?? []} onChange={(next) => setMilestone(m.id, { photos: next })} />
               </div>
             </div>
           ))}
