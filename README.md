@@ -119,7 +119,18 @@ node scripts/serve.mjs dist 5188 0.0.0.0
 
 `dist/` 就是纯静态站点，没有后端，可以放到任何地方：
 
-- **GitHub Pages**：仓库里已经带了 `.github/workflows/deploy.yml`，推到 GitHub 后在 Settings → Pages 里把 Source 选成 "GitHub Actions"，之后每次 push 会自动构建发布。
+- **GitHub Pages**：已经部署在 <https://yzz929.github.io/our-story/>。发布方式是「把 `dist/` 推到 `gh-pages` 分支」：
+
+  ```bash
+  npm run build
+  $env:GH_TOKEN="ghp_xxx"     # 有 repo 权限的 classic token
+  node scripts/deploy-pages.mjs
+  ```
+
+  Pages 设置：仓库 Settings → Pages → Source 选 **Deploy from a branch**，分支 `gh-pages`、目录 `/`。
+
+  想改成「push 代码自动构建」，需要给 token 加 `workflow` 权限，然后把 `deploy/pages-workflow.yml.example` 放回 `.github/workflows/deploy.yml`，并在 Settings → Pages 把 Source 切成 **GitHub Actions**。
+
 - **Vercel / Netlify**：把仓库连上去，构建命令 `npm run build`，输出目录 `dist`。
 - **自己的服务器 / 对象存储**：把 `dist/` 整个丢上去就行（用的是相对路径，放在子目录也能跑）。
 
