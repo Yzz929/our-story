@@ -14,12 +14,18 @@ import { Anniversaries } from './components/Anniversaries';
 import { Quote } from './components/Quote';
 import { Footer } from './components/Footer';
 import { Editor } from './components/Editor';
+import { Gate, gateNeeded } from './components/Gate';
+import type { GateConfig } from './components/Gate';
+import gateConfigJson from './data/cloud-config.json';
 import { Heart } from './components/Icons';
+
+const gateConfig = (gateConfigJson as { gate?: GateConfig }).gate;
 
 export default function App() {
   const [data, setData] = useState<SiteData>(() => loadData());
   const [booting, setBooting] = useState(cloudEnabled);
   const [cloudReady, setCloudReady] = useState(!cloudEnabled);
+  const [unlocked, setUnlocked] = useState(() => !gateNeeded(gateConfig));
   const [theme, toggleTheme] = useTheme();
   const now = useNow(1000);
   const route = useHashRoute();
@@ -92,6 +98,23 @@ export default function App() {
   useEffect(() => {
     document.title = title;
   }, [title]);
+
+  // 输口令之前，什么都不放出来
+  if (!unlocked) {
+    return (
+      <Gate
+        config={{
+          title: gateConfig?.title ?? '故事的开始',
+          hint: gateConfig?.hint ?? '输入我们的那一天',
+          password: gateConfig?.password ?? '',
+          placeholder: gateConfig?.placeholder ?? '口令',
+          button: gateConfig?.button ?? '进去看看',
+          wrong: gateConfig?.wrong ?? '口令不对，再想想',
+        }}
+        onUnlock={() => setUnlocked(true)}
+      />
+    );
+  }
 
   if (booting) {
     return (
