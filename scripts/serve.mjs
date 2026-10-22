@@ -5,6 +5,7 @@ import path from 'node:path';
 
 const ROOT = path.resolve(process.argv[2] ?? 'dist');
 const PORT = Number(process.argv[3] ?? 5188);
+const HOST = process.argv[4] ?? '127.0.0.1';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -43,6 +44,6 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(`serving ${ROOT} at http://127.0.0.1:${PORT}/`);
+server.listen(PORT, HOST, () => {
+  console.log(`serving ${ROOT} at http://${HOST}:${PORT}/`);
 });

@@ -1,7 +1,7 @@
 {
-  "_说明": "Supabase 配置。anon key 是公开 key，提交进仓库是正常的；不要在这里放 service_role key。",
-  "url": "",
-  "anonKey": "",
+  "_说明": "Supabase 配置。anon/publishable key 是公开 key，提交进仓库是正常的；不要在这里放 secret/service_role key。",
+  "url": "https://hyqpsbwcibrjaxgxglrf.supabase.co",
+  "anonKey": "sb_publishable_vxt4CwXmqq3VBW7XKu3GvA_xNM6NVo4",
   "table": "site",
   "bucket": "photos"
 }

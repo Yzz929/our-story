@@ -20,11 +20,10 @@ const BUCKET = (import.meta.env.VITE_SUPABASE_BUCKET as string | undefined) || c
 export const cloudEnabled = Boolean(URL_ && KEY);
 
 function headers(extra: Record<string, string> = {}): Record<string, string> {
-  return {
-    apikey: KEY,
-    Authorization: `Bearer ${KEY}`,
-    ...extra,
-  };
+  const h: Record<string, string> = { apikey: KEY, ...extra };
+  // 旧版 anon key 是 JWT（eyJ...），新版 publishable key（sb_publishable_...）只放 apikey 头即可
+  if (KEY.startsWith('eyJ')) h.Authorization = `Bearer ${KEY}`;
+  return h;
 }
 
 /** 读云端保存的整站数据；没配云端或云端还没有数据时返回 null */

@@ -37,9 +37,13 @@ npm run dev
 
    （也可以写进 `.env` 的 `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`，会覆盖这个文件）
 
+   `anonKey` 填两种都行：旧版 anon JWT（`eyJ...`）或新版 Publishable key（`sb_publishable_...`）。
+
 5. `npm run build` 重新构建、部署。之后手机和电脑都能写了。
 
-> 这个配置文件是提交进仓库的：anon key 本来就是公开 key，放在前端是 Supabase 的标准用法。**不要**把 `service_role` key 填进来。
+第一次部署时，云端 `site` 表还是空的，站点会先显示仓库里的 `sample.json`；你在编辑页随便改一个字并保存，内容就写进云端了。也可以直接跑 `node scripts/seed-cloud.mjs` 把 `sample.json` 播种上去。
+
+> 这个配置文件是提交进仓库的：anon key 本来就是公开 key，放在前端是 Supabase 的标准用法。**不要**把 `service_role` / `secret` key 填进来。
 
 ### 1）网页编辑器（不配云端也能用）
 
@@ -103,6 +107,15 @@ npm run dev
 npm run build     # 产物在 dist/
 npm run preview   # 本地预览构建结果
 ```
+
+想先在手机上试（同一个 Wi-Fi）：
+
+```bash
+node scripts/serve.mjs dist 5188 0.0.0.0
+# 手机浏览器打开 http://<电脑的局域网IP>:5188/
+```
+
+如果手机打不开，多半是 Windows 防火墙拦了 Node，去「Windows 安全中心 → 防火墙和网络保护 → 允许应用通过防火墙」里给 Node.js 放行，或者直接部署到下面任意一个平台。
 
 `dist/` 就是纯静态站点，没有后端，可以放到任何地方：
 
