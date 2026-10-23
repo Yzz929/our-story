@@ -81,25 +81,37 @@ export interface CloudProbe {
   ok: boolean;
   ms: number;
   message: string;
+  /** HTTP 状态码（网络层失败时为 0） */
+  status: number;
 }
 
 /** 网络诊断：测一次读写往返，判断是网络问题还是配置问题 */
-export async function probeCloud(): Promise<CloudProbe> {
-  if (!cloudEnabled) return { ok: false, ms: 0, message: '未配置云端' };
+export async function probeCloud(timeoutMs = 4000): Promise<CloudProbe> {
+  if (!cloudEnabled) return { ok: false, ms: 0, message: '未配置云端', status: 0 };
   const t0 = Date.now();
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const res = await fetch(`${URL_}/rest/v1/${TABLE}?id=eq.1&select=id`, {
       headers: headers(),
       cache: 'no-store',
+      signal: ctrl.signal,
     });
     const ms = Date.now() - t0;
     if (!res.ok) {
-      return { ok: false, ms, message: `服务器返回 ${res.status}（${res.statusText || '请求被拒绝'}）` };
+      return { ok: false, ms, message: `服务器返回 ${res.status}（${res.statusText || '请求被拒绝'}）`, status: res.status };
     }
-    return { ok: true, ms, message: `连接正常，往返 ${ms} ms` };
+    return { ok: true, ms, message: `连接正常，往返 ${ms} ms`, status: res.status };
   } catch (e) {
     const ms = Date.now() - t0;
-    const msg = e instanceof Error ? e.message : String(e);
-    return { ok: false, ms, message: `网络不通：${msg}` };
+    const aborted = (e as Error)?.name === 'AbortError';
+    return {
+      ok: false,
+      ms,
+      message: aborted ? `连接超时（>${timeoutMs}ms）` : `网络不通：${e instanceof Error ? e.message : String(e)}`,
+      status: 0,
+    };
+  } finally {
+    clearTimeout(timer);
   }
 }

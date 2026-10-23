@@ -1394,6 +1394,34 @@ a {
   color: var(--rose-deep);
 }
 
+/* 连接状态小圆点 */
+.conn-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.conn-line i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-mute);
+}
+
+.conn-line.is-online i {
+  background: #6fb08a;
+}
+
+.conn-line.is-offline i {
+  background: #d08a4e;
+  animation: netPulse 1.1s ease-in-out infinite;
+}
+
+.conn-line.is-probing i {
+  background: #c9b48a;
+  animation: netPulse 1.1s ease-in-out infinite;
+}
+
 .editor-item {
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
@@ -1748,6 +1776,41 @@ a {
   color: #b23c53;
   opacity: 0;
   transition: opacity 0.3s var(--ease);
+}
+
+/* 网络不稳时在口令页给一个小提示，不抢戏 */
+.gate-net {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgba(43, 33, 38, 0.45);
+}
+
+:root[data-theme="dark"] .gate-net {
+  color: var(--ink-mute);
+}
+
+.gate-net i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d08a4e;
+  animation: netPulse 1.1s ease-in-out infinite;
+}
+
+@keyframes netPulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
 }
 
 .gate-error.show {

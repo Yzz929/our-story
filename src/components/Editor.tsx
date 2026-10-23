@@ -3,6 +3,7 @@ import type { ChangeEvent } from 'react';
 import { fileToDataUrl } from '../lib/image';
 import { photoUrl } from '../lib/photo';
 import type { CloudSync } from '../lib/useCloudSync';
+import type { Connection } from '../lib/useConnection';
 import { ArrowDown, ArrowLeft, ArrowUp, Download, Plus, Trash, Upload } from './Icons';
 import { downloadJson, hasSaved, saveData, SAMPLE, storageBytes, uid } from '../data/store';
 import { cloudEnabled, probeCloud, uploadImage } from '../data/cloud';
@@ -89,6 +90,8 @@ interface Props {
   cloudReady?: boolean;
   /** 云端同步状态（自动重试 + 本地草稿由 App 统一管） */
   sync?: CloudSync;
+  /** 页面级连接探测状态 */
+  connection?: Connection;
 }
 
 /** 作者选择：两个小胶囊，再点一次可以取消 */
@@ -123,7 +126,7 @@ function AuthorPills({
   );
 }
 
-export function Editor({ data, onChange, onToast, cloudReady = true, sync }: Props) {
+export function Editor({ data, onChange, onToast, cloudReady = true, sync, connection }: Props) {
   const { couple, milestones, gallery, anniversaries, quotes } = data;
 
   // 这台设备是谁在用（记在本机），新建记录默认算在 TA 名下
@@ -309,6 +312,17 @@ export function Editor({ data, onChange, onToast, cloudReady = true, sync }: Pro
           )}
           {cloudEnabled && (
             <>
+              {connection && (
+                <p className={`hint conn-line is-${connection.state}`}>
+                  <i aria-hidden="true" />
+                  连接：
+                  {connection.state === 'online'
+                    ? `正常${connection.latency ? `（${connection.latency} ms）` : ''}`
+                    : connection.state === 'probing'
+                      ? '检测中…'
+                      : `未连接，正在自动重试（第 ${connection.attempts} 次）`}
+                </p>
+              )}
               <p className="hint">
                 改动会先存成本机草稿，再自动同步到云端：断网/切后台失败时会自动重试，页面关掉也不会丢。
                 {sync?.lastSavedAt

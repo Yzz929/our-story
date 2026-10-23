@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { kickMusic } from '../lib/audioBus';
+import type { Connection } from '../lib/useConnection';
 import { Heart } from './Icons';
 
 export interface GateConfig {
@@ -18,9 +19,11 @@ const STORAGE_KEY = 'our-story:gate';
 export function Gate({
   config,
   onUnlock,
+  connection,
 }: {
   config: Required<Pick<GateConfig, 'title' | 'hint' | 'password' | 'placeholder' | 'button' | 'wrong'>>;
   onUnlock: () => void;
+  connection?: Connection;
 }) {
   const [value, setValue] = useState('');
   const [wrong, setWrong] = useState(false);
@@ -88,6 +91,13 @@ export function Gate({
         </button>
 
         <p className={`gate-error ${wrong ? 'show' : ''}`}>{config.wrong}</p>
+
+        {connection?.state === 'offline' && (
+          <p className="gate-net">
+            <i aria-hidden="true" />
+            网络有点不稳，正在自动重连…
+          </p>
+        )}
       </form>
 
       <p className="gate-foot">只给两个人的小地方</p>

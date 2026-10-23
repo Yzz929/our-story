@@ -8,6 +8,7 @@ import { elapsedSince } from './lib/date';
 import { fillDays, toChineseNumber } from './lib/cn';
 import { loadDraft } from './lib/localDraft';
 import { useCloudSync } from './lib/useCloudSync';
+import { useConnection } from './lib/useConnection';
 import { Nav } from './components/Nav';
 import { Hero } from './components/Hero';
 import { Timeline } from './components/Timeline';
@@ -81,6 +82,11 @@ export default function App() {
   // 云端同步：自动重试 + 本地草稿兜底
   const sync = useCloudSync(data, cloudEnabled && cloudReady, true, bootstrap.current?.dirty ?? false);
 
+  // 一进页面就开始探测云端连通性（口令页阶段也在跑）；连上后如果是开机没读到云端，顺手补一次
+  const connection = useConnection(() => {
+    if (!cloudReady) void loadCloud();
+  });
+
   // 没配云端时，改动自动存本机浏览器
   useEffect(() => {
     if (cloudEnabled) return;
@@ -144,6 +150,7 @@ export default function App() {
           wrong: gateConfig?.wrong ?? '口令不对，再想想',
         }}
         onUnlock={() => setUnlocked(true)}
+        connection={connection}
       />
     );
   } else if (booting) {
@@ -161,6 +168,7 @@ export default function App() {
         onToast={showToast}
         cloudReady={cloudReady}
         sync={cloudEnabled ? sync : undefined}
+        connection={connection}
       />
     );
   } else {

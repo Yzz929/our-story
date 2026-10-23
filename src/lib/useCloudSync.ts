@@ -5,8 +5,11 @@ import type { SiteData } from '../data/types';
 
 export type SyncStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
 
-/** 失败后的重试间隔（毫秒）：先快后慢，最长 20 秒一次，切网/回前台还会立刻补一次 */
+/** 连续失败 10 秒之后的重试间隔：先快后慢，最长 20 秒一次 */
 const BACKOFF = [1500, 4000, 9000, 20000];
+/** 开始失败的 10 秒内，每秒重试一次 */
+const FAST_WINDOW = 10000;
+const FAST_DELAY = 1000;
 
 export interface CloudSync {
   status: SyncStatus;
@@ -28,6 +31,8 @@ export function useCloudSync(
   const dataRef = useRef(data);
   const dirtyRef = useRef(initialDirty);
   const attemptRef = useRef(0);
+  const failStartRef = useRef<number | null>(null);
+  const slowStepRef = useRef(0);
   const timerRef = useRef<number | null>(null);
   const draftTimerRef = useRef<number | null>(null);
   const savingRef = useRef(false);
@@ -53,6 +58,8 @@ export function useCloudSync(
       await saveCloudSite(snapshot);
       if (!mountedRef.current) return;
       attemptRef.current = 0;
+      failStartRef.current = null;
+      slowStepRef.current = 0;
       setLastError('');
       setLastSavedAt(Date.now());
       if (dataRef.current === snapshot) {
@@ -71,7 +78,18 @@ export function useCloudSync(
       setLastError(msg);
       setStatus('error');
       dirtyRef.current = true;
-      const delay = BACKOFF[Math.min(attemptRef.current, BACKOFF.length - 1)];
+
+      if (failStartRef.current === null) failStartRef.current = Date.now();
+      const failingFor = Date.now() - failStartRef.current;
+
+      let delay: number;
+      if (failingFor < FAST_WINDOW) {
+        // 刚开始失败的头 10 秒：每秒重试一次
+        delay = FAST_DELAY;
+      } else {
+        delay = BACKOFF[Math.min(slowStepRef.current, BACKOFF.length - 1)];
+        slowStepRef.current += 1;
+      }
       attemptRef.current += 1;
       timerRef.current = window.setTimeout(() => void flush(), delay);
     } finally {

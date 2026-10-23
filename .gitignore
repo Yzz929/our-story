@@ -17,3 +17,4 @@ background_music/*.wav
 # 由 scripts/sync-music.mjs 生成，构建时自动重建
 public/music/
 
+dist-conn/
