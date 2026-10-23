@@ -36,7 +36,7 @@ export async function fetchCloudSite(): Promise<SiteData | null> {
 }
 
 /** 整站数据写回云端（id 固定为 1，存在就覆盖） */
-export async function saveCloudSite(data: SiteData): Promise<void> {
+export async function saveCloudSite(data: SiteData, opts: { keepalive?: boolean } = {}): Promise<void> {
   if (!cloudEnabled) return;
   const res = await fetch(`${URL_}/rest/v1/${TABLE}`, {
     method: 'POST',
@@ -45,6 +45,7 @@ export async function saveCloudSite(data: SiteData): Promise<void> {
       Prefer: 'resolution=merge-duplicates,return=minimal',
     }),
     body: JSON.stringify([{ id: 1, data, updated_at: new Date().toISOString() }]),
+    keepalive: opts.keepalive,
   });
   if (!res.ok) throw new Error(`保存到云端失败：${res.status} ${await res.text().catch(() => '')}`);
 }
@@ -74,4 +75,31 @@ export async function pingCloud(): Promise<string> {
   const res = await fetch(`${URL_}/rest/v1/${TABLE}?id=eq.1&select=id`, { headers: headers() });
   if (!res.ok) return `连接失败（${res.status}）`;
   return '已连接云端';
+}
+
+export interface CloudProbe {
+  ok: boolean;
+  ms: number;
+  message: string;
+}
+
+/** 网络诊断：测一次读写往返，判断是网络问题还是配置问题 */
+export async function probeCloud(): Promise<CloudProbe> {
+  if (!cloudEnabled) return { ok: false, ms: 0, message: '未配置云端' };
+  const t0 = Date.now();
+  try {
+    const res = await fetch(`${URL_}/rest/v1/${TABLE}?id=eq.1&select=id`, {
+      headers: headers(),
+      cache: 'no-store',
+    });
+    const ms = Date.now() - t0;
+    if (!res.ok) {
+      return { ok: false, ms, message: `服务器返回 ${res.status}（${res.statusText || '请求被拒绝'}）` };
+    }
+    return { ok: true, ms, message: `连接正常，往返 ${ms} ms` };
+  } catch (e) {
+    const ms = Date.now() - t0;
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, ms, message: `网络不通：${msg}` };
+  }
 }

@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { fileToDataUrl } from '../lib/image';
 import { photoUrl } from '../lib/photo';
+import type { CloudSync } from '../lib/useCloudSync';
 import { ArrowDown, ArrowLeft, ArrowUp, Download, Plus, Trash, Upload } from './Icons';
 import { downloadJson, hasSaved, saveData, SAMPLE, storageBytes, uid } from '../data/store';
-import { cloudEnabled, saveCloudSite, uploadImage } from '../data/cloud';
+import { cloudEnabled, probeCloud, uploadImage } from '../data/cloud';
 import type { Anniversary, Couple, GalleryItem, Milestone, SiteData } from '../data/types';
 
 const MAX_STORAGE = 5 * 1024 * 1024;
@@ -86,6 +87,8 @@ interface Props {
   onToast: (msg: string) => void;
   /** 云端读取是否成功；没成功就不要回写，免得覆盖云端内容 */
   cloudReady?: boolean;
+  /** 云端同步状态（自动重试 + 本地草稿由 App 统一管） */
+  sync?: CloudSync;
 }
 
 /** 作者选择：两个小胶囊，再点一次可以取消 */
@@ -120,7 +123,7 @@ function AuthorPills({
   );
 }
 
-export function Editor({ data, onChange, onToast, cloudReady = true }: Props) {
+export function Editor({ data, onChange, onToast, cloudReady = true, sync }: Props) {
   const { couple, milestones, gallery, anniversaries, quotes } = data;
 
   // 这台设备是谁在用（记在本机），新建记录默认算在 TA 名下
@@ -188,29 +191,28 @@ export function Editor({ data, onChange, onToast, cloudReady = true }: Props) {
   const bytes = storageBytes();
   const pct = Math.min(100, (bytes / MAX_STORAGE) * 100);
 
-  // 云端模式下自动同步：改完停手 1.8 秒就写回云端（云端没读成功时先不写）
-  const [cloudState, setCloudState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  useEffect(() => {
-    if (!cloudEnabled || !cloudReady) return;
-    setCloudState('saving');
-    const id = window.setTimeout(() => {
-      saveCloudSite(data)
-        .then(() => setCloudState('saved'))
-        .catch(() => setCloudState('error'));
-    }, 1800);
-    return () => window.clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, cloudReady]);
+  // 同步状态由 App 里的 useCloudSync 负责（自动重试 + 本地草稿兜底）
+  const [probing, setProbing] = useState(false);
+  const [probeResult, setProbeResult] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const runProbe = async () => {
+    setProbing(true);
+    const r = await probeCloud();
+    setProbeResult({ ok: r.ok, text: r.message });
+    setProbing(false);
+  };
 
   const cloudLabel = !cloudReady
     ? '云端读取失败，先不写入'
-    : cloudState === 'saving'
+    : sync?.status === 'saving'
       ? '正在保存到云端…'
-      : cloudState === 'saved'
-        ? '已保存到云端'
-        : cloudState === 'error'
-          ? '云端保存失败，检查网络或配置'
-          : '云端同步已开启';
+      : sync?.status === 'pending'
+        ? '有改动，准备保存…'
+        : sync?.status === 'saved'
+          ? '已保存到云端'
+          : sync?.status === 'error'
+            ? '保存失败，正在自动重试'
+            : '云端同步已开启';
 
   return (
     <div className="editor">
@@ -280,7 +282,16 @@ export function Editor({ data, onChange, onToast, cloudReady = true }: Props) {
               <small>{cloudEnabled ? cloudLabel : hasSaved() ? '正在自动保存' : '尚未保存'}</small>
             </h2>
             {cloudEnabled ? (
-              <span className="hint">照片会上传到云端，不占本机空间</span>
+              <div className="panel-actions">
+                {sync?.status === 'error' && (
+                  <button className="btn btn-mini" onClick={() => sync.retryNow()}>
+                    立即重试
+                  </button>
+                )}
+                <button className="btn btn-mini" onClick={runProbe} disabled={probing}>
+                  {probing ? '检测中…' : '网络诊断'}
+                </button>
+              </div>
             ) : (
               <span className="hint">{(bytes / 1024).toFixed(0)} KB / 约 5 MB</span>
             )}
@@ -297,9 +308,20 @@ export function Editor({ data, onChange, onToast, cloudReady = true }: Props) {
             </>
           )}
           {cloudEnabled && (
-            <p className="hint">
-              每次改动停手 1.8 秒会自动写到云端；手机和电脑打开同一个网址，看到的内容是一样的。
-            </p>
+            <>
+              <p className="hint">
+                改动会先存成本机草稿，再自动同步到云端：断网/切后台失败时会自动重试，页面关掉也不会丢。
+                {sync?.lastSavedAt
+                  ? ` 上次保存：${new Date(sync.lastSavedAt).toLocaleTimeString('zh-CN', { hour12: false })}`
+                  : ''}
+              </p>
+              {sync?.status === 'error' && sync.lastError && (
+                <p className="hint sync-error">失败原因：{sync.lastError.slice(0, 180)}</p>
+              )}
+              {probeResult && (
+                <p className={`hint ${probeResult.ok ? 'sync-ok' : 'sync-error'}`}>诊断：{probeResult.text}</p>
+              )}
+            </>
           )}
         </div>
 
@@ -602,20 +624,14 @@ export function Editor({ data, onChange, onToast, cloudReady = true }: Props) {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button
               className="btn btn-primary"
-              onClick={async () => {
+              onClick={() => {
                 if (cloudEnabled) {
                   if (!cloudReady) {
                     onToast('云端数据没读成功，先不写入');
                     return;
                   }
-                  try {
-                    await saveCloudSite(data);
-                    setCloudState('saved');
-                    onToast('已保存到云端');
-                  } catch {
-                    setCloudState('error');
-                    onToast('保存失败，检查网络或云端配置');
-                  }
+                  sync?.retryNow();
+                  onToast('正在同步到云端…');
                 } else {
                   saveData(data);
                   onToast('已保存到本机浏览器');
@@ -625,7 +641,9 @@ export function Editor({ data, onChange, onToast, cloudReady = true }: Props) {
               {cloudEnabled ? '立即保存到云端' : '保存到本机'}
             </button>
             <span className="hint" style={{ alignSelf: 'center' }}>
-              {cloudEnabled ? '平时不用点，改完会自动同步；这一步是手动确认一次。' : '平时不用点，改动会自动保存；这一步只是给你个确认。'}
+              {cloudEnabled
+                ? '平时不用点，改完会自动同步；断网时会自动重试，也会先存进本机草稿。'
+                : '平时不用点，改动会自动保存；这一步只是给你个确认。'}
             </span>
           </div>
         </div>

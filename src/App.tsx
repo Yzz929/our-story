@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { loadData, saveData } from './data/store';
 import { cloudEnabled, fetchCloudSite } from './data/cloud';
@@ -6,6 +6,8 @@ import type { SiteData } from './data/types';
 import { useHashRoute, useNow, useReveal, useTheme } from './hooks';
 import { elapsedSince } from './lib/date';
 import { fillDays, toChineseNumber } from './lib/cn';
+import { loadDraft } from './lib/localDraft';
+import { useCloudSync } from './lib/useCloudSync';
 import { Nav } from './components/Nav';
 import { Hero } from './components/Hero';
 import { Timeline } from './components/Timeline';
@@ -28,7 +30,14 @@ const gateConfig = (gateConfigJson as { gate?: GateConfig }).gate;
 const musicTracks = (musicJson as { tracks?: Track[] }).tracks ?? [];
 
 export default function App() {
-  const [data, setData] = useState<SiteData>(() => loadData());
+  // 本地草稿优先：上次没同步成功（或还没同步）的改动不能丢
+  const bootstrap = useRef<{ data?: SiteData; dirty: boolean } | null>(null);
+  if (!bootstrap.current) {
+    const draft = loadDraft();
+    bootstrap.current = { data: draft?.data, dirty: draft?.dirty ?? false };
+  }
+
+  const [data, setData] = useState<SiteData>(() => bootstrap.current?.data ?? loadData());
   const [booting, setBooting] = useState(cloudEnabled);
   const [cloudReady, setCloudReady] = useState(!cloudEnabled);
   const [unlocked, setUnlocked] = useState(() => !gateNeeded(gateConfig));
@@ -38,30 +47,41 @@ export default function App() {
   const [lightbox, setLightbox] = useState<LightboxState | null>(null);
   const [toast, setToast] = useState('');
 
-  // 配了云端就以云端为准（多个设备共享同一份内容）
-  useEffect(() => {
+  // 配了云端就以云端为准（多个设备共享同一份内容）；本地有未同步改动时以本地为准
+  const loadCloud = useCallback(async () => {
     if (!cloudEnabled) return;
-    let alive = true;
-    fetchCloudSite()
-      .then((cloud) => {
-        if (!alive) return;
-        if (cloud?.couple) setData(cloud);
-        setCloudReady(true);
-      })
-      .catch((err) => {
-        // 读不到云端就不允许回写，免得用示例数据把云端内容盖掉
-        console.warn('[cloud]', err);
-        if (alive) setCloudReady(false);
-      })
-      .finally(() => {
-        if (alive) setBooting(false);
-      });
-    return () => {
-      alive = false;
-    };
+    try {
+      const cloud = await fetchCloudSite();
+      setCloudReady(true);
+      if (bootstrap.current?.dirty) return; // 本地草稿还没传上去，别被云端覆盖
+      if (cloud?.couple) setData(cloud);
+    } catch (err) {
+      // 读不到云端就不允许回写，免得用示例数据把云端内容盖掉
+      console.warn('[cloud]', err);
+      setCloudReady(false);
+    } finally {
+      setBooting(false);
+    }
   }, []);
 
-  // 没配云端时，改动自动存本机浏览器；配了云端由编辑页负责写回云端
+  useEffect(() => {
+    void loadCloud();
+  }, [loadCloud]);
+
+  // 开机时没连上云端（比如在电梯里打开）→ 网络恢复后自动重连，然后把本地草稿补传
+  useEffect(() => {
+    if (!cloudEnabled) return;
+    const onOnline = () => {
+      if (!cloudReady) void loadCloud();
+    };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [cloudEnabled, cloudReady, loadCloud]);
+
+  // 云端同步：自动重试 + 本地草稿兜底
+  const sync = useCloudSync(data, cloudEnabled && cloudReady, true, bootstrap.current?.dirty ?? false);
+
+  // 没配云端时，改动自动存本机浏览器
   useEffect(() => {
     if (cloudEnabled) return;
     const id = window.setTimeout(() => saveData(data), 400);
@@ -134,7 +154,15 @@ export default function App() {
       </div>
     );
   } else if (editing) {
-    view = <Editor data={data} onChange={setData} onToast={showToast} cloudReady={cloudReady} />;
+    view = (
+      <Editor
+        data={data}
+        onChange={setData}
+        onToast={showToast}
+        cloudReady={cloudReady}
+        sync={cloudEnabled ? sync : undefined}
+      />
+    );
   } else {
     view = (
       <>

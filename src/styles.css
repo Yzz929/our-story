@@ -1376,6 +1376,24 @@ a {
   color: var(--ink-mute);
 }
 
+.panel-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.hint.sync-error {
+  color: #b23c53;
+}
+
+:root[data-theme="dark"] .hint.sync-error {
+  color: #f08fa2;
+}
+
+.hint.sync-ok {
+  color: var(--rose-deep);
+}
+
 .editor-item {
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
