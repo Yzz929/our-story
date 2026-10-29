@@ -4,10 +4,10 @@ import { Lunar, Solar } from 'lunar-javascript';
 const today = Solar.fromDate(new Date());
 console.log('今天阳历:', today.toYmd(), '| 农历:', today.getLunar().toString());
 
-// 农历月日：男 九月初五（9 月 5 日），女 正月十六（1 月 16 日）
+// 农历月日：示例用 三月初三 / 八月初八，需要时改成自己的
 const targets = [
-  { key: 'boy', month: 9, day: 5, label: '九月初五' },
-  { key: 'girl', month: 1, day: 16, label: '正月十六' },
+  { key: 'boy', month: 3, day: 3, label: '三月初三' },
+  { key: 'girl', month: 8, day: 8, label: '八月初八' },
 ];
 
 const out = {};

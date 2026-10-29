@@ -42,7 +42,7 @@ await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, devi
 await send('Page.navigate', { url: APP });
 await sleep(3500);
 
-await ev(`(() => { const i = document.querySelector('.gate-input'); if(!i) return; const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; set.call(i, '20260512'); i.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('.gate-btn').click(); return 'ok'; })()`);
+await ev(`(() => { const i = document.querySelector('.gate-input'); if(!i) return; const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; set.call(i, (process.env.GATE_PASS || '00000000')); i.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('.gate-btn').click(); return 'ok'; })()`);
 await sleep(3000);
 
 const out = {};

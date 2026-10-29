@@ -10,7 +10,7 @@ interface Props {
   onPhoto: (src: string, caption: string) => void;
 }
 
-/** 作者小徽章：@小豭 / @小谢 */
+/** 作者小徽章：@男方名字 / @女方名字 */
 function Author({ name, author }: { name: string; author: 'boy' | 'girl' }) {
   return (
     <span className={`tl-author tl-author-${author}`} title={`${name} 写的`}>

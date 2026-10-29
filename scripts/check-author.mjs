@@ -49,7 +49,7 @@ if (await ev(`!!document.querySelector('.gate')`)) {
   await ev(`(() => {
     const i = document.querySelector('.gate-input');
     const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-    set.call(i, '20260512');
+    set.call(i, (process.env.GATE_PASS || '00000000'));
     i.dispatchEvent(new Event('input', { bubbles: true }));
     return 'ok';
   })()`);
@@ -79,25 +79,25 @@ out.layout = await ev(`(() => {
   };
 })()`);
 
-// 3) 编辑页：把第一条记录标成小豭
+// 3) 编辑页：把第一条记录标成小A
 await ev(`location.hash = '#/edit'`);
 await sleep(2200);
 out.editorLoaded = await ev(`!!document.querySelector('.editor')`);
 out.mePills = await ev(`document.querySelectorAll('.me-row .author-pills button').length`);
 
-// 点「我是」里的第一个（小豭）
+// 点「我是」里的第一个（小A）
 await ev(`(() => { const b = document.querySelectorAll('.me-row .author-pills button')[0]; b.click(); return 'ok'; })()`);
 await sleep(600);
 out.meStored = await ev(`localStorage.getItem('our-story:me')`);
 
-// 第一条记录里点「小豭」作为作者
+// 第一条记录里点「小A」作为作者
 out.setAuthor = await ev(`(() => {
   const panels = [...document.querySelectorAll('.panel')];
   const p = panels.find(x => (x.querySelector('.panel-title')?.textContent || '').includes('点点滴滴'));
   const first = p.querySelector('.editor-item');
   const pills = [...first.querySelectorAll('.author-pills button')];
   if (!pills.length) return 'no-pills';
-  const boyPill = pills.find(b => b.textContent.trim() === '小豭') || pills[0];
+  const boyPill = pills.find(b => b.textContent.trim() === '小A') || pills[0];
   boyPill.click();
   return boyPill.textContent.trim();
 })()`);

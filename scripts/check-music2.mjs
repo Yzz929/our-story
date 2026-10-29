@@ -60,7 +60,7 @@ out.musicHiddenBeforeUnlock = await ev(`document.querySelector('.music')?.classL
 // 真实点击输入框 + 真实键入
 await realClick('.gate-input');
 await sleep(200);
-await send('Input.insertText', { text: '20260512' });
+await send('Input.insertText', { text: (process.env.GATE_PASS || '00000000') });
 await sleep(300);
 out.inputValue = await ev(`document.querySelector('.gate-input')?.value`);
 

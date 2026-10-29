@@ -48,7 +48,7 @@ if (await ev(`!!document.querySelector('.gate')`)) {
   await ev(`(() => {
     const i = document.querySelector('.gate-input');
     const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-    set.call(i, '20260512');
+    set.call(i, (process.env.GATE_PASS || '00000000'));
     i.dispatchEvent(new Event('input', { bubbles: true }));
     return 'ok';
   })()`);

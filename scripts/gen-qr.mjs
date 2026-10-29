@@ -104,7 +104,7 @@ const html = `<!doctype html>
     <p class="sub">扫一扫，走进我们的故事</p>
     <div class="qr-wrap"><img src="${dataUrl}" alt="扫码打开我们的故事" /></div>
     <p class="hint">打开后输入口令：我们在一起的那一天</p>
-    <div class="names">小豭 <svg viewBox="0 0 24 24"><path d="M12 20.4s-7.6-4.7-7.6-9.7A4.4 4.4 0 0 1 12 7.2a4.4 4.4 0 0 1 7.6 3.5c0 5-7.6 9.7-7.6 9.7z"/></svg> 小谢</div>
+    <div class="names">阿远 <svg viewBox="0 0 24 24"><path d="M12 20.4s-7.6-4.7-7.6-9.7A4.4 4.4 0 0 1 12 7.2a4.4 4.4 0 0 1 7.6 3.5c0 5-7.6 9.7-7.6 9.7z"/></svg> 小雨</div>
   </div>
   <div class="foot">JUST FOR TWO · ${URL_SITE.replace('https://', '')}</div>
 </body>

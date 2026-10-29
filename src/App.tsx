@@ -144,7 +144,8 @@ export default function App() {
         config={{
           title: gateConfig?.title ?? '故事的开始',
           hint: gateConfig?.hint ?? '输入我们的那一天',
-          password: gateConfig?.password ?? '',
+          passwordHash: gateConfig?.passwordHash,
+          password: gateConfig?.password,
           placeholder: gateConfig?.placeholder ?? '口令',
           button: gateConfig?.button ?? '进去看看',
           wrong: gateConfig?.wrong ?? '口令不对，再想想',

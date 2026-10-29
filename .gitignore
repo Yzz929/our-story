@@ -11,10 +11,15 @@ _research/
 
 # 音乐源文件（无损）不提交，只提交转好的 mp3
 background_music/_源文件/
+background_music/*.mp3
 background_music/*.flac
 background_music/*.wav
 
-# �� scripts/sync-music.mjs ���ɣ�����ʱ�Զ��ؽ�
+# �� scripts/sync-music.mjs ���ɣ�����ʱ�Զ��ؽ�
 public/music/
 
 dist-conn/
+
+# 预览截图和二维码卡片（本地产物，含真实姓名，不进公开仓库）
+docs/preview/
+docs/qr/

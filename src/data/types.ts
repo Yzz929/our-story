@@ -37,7 +37,7 @@ export interface Milestone {
   tag?: string;
   /** 图片地址列表：本地相对路径写成 photos/xxx.jpg，云端是完整 URL */
   photos?: string[];
-  /** 这条是谁写的：boy = 小豭，girl = 小谢 */
+  /** 这条是谁写的：boy = 男方，girl = 女方 */
   author?: 'boy' | 'girl';
 }
 
@@ -49,7 +49,7 @@ export interface Anniversary {
   /** 卡片上的小图标，直接写一个 emoji */
   icon: string;
   note?: string;
-  /** 农历月日，例如「九月初五」；填了就用农历推算 */
+  /** 农历月日，例如「八月初八」；填了就用农历推算 */
   lunar?: string;
   /** 农历对应的阳历日期表，key 是年份，值 YYYY-MM-DD（由 scripts/lunar-table.mjs 生成） */
   solarByYear?: Record<string, string>;

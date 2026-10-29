@@ -10,7 +10,7 @@ const W = Number(process.env.VW || 390);
 const H = Number(process.env.VH || 844);
 const SCROLL = Number(process.env.SCROLL || 0);
 const OUT = process.env.OUT || 'D:\\DSH\\AI-Projects\\_research\\shots\\final.png';
-const PASSWORD = process.env.PASS || '20260512';
+const PASSWORD = process.env.PASS || (process.env.GATE_PASS || '00000000');
 
 fs.rmSync(PROFILE, { recursive: true, force: true });
 const proc = spawn(EDGE, ['--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run',

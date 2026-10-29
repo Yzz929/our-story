@@ -51,7 +51,7 @@ const out = {};
 out.probeCount = probes.length; // 连上之后应该只有 1 次
 out.gateNet = await ev(`document.querySelector('.gate-net')?.textContent?.trim() || '（无，说明已连上）'`);
 
-await ev(`(() => { const i = document.querySelector('.gate-input'); if(!i) return; const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; set.call(i, '20260512'); i.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('.gate-btn').click(); })()`);
+await ev(`(() => { const i = document.querySelector('.gate-input'); if(!i) return; const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; set.call(i, (process.env.GATE_PASS || '00000000')); i.dispatchEvent(new Event('input', { bubbles: true })); document.querySelector('.gate-btn').click(); })()`);
 await sleep(3000);
 await ev(`location.hash = '#/edit'`);
 await sleep(2600);

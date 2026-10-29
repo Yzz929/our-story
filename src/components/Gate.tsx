@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { kickMusic } from '../lib/audioBus';
 import type { Connection } from '../lib/useConnection';
+import { sha256Hex } from '../lib/sha256';
 import { Heart } from './Icons';
 
 export interface GateConfig {
   enabled?: boolean;
   title?: string;
   hint?: string;
+  /** 口令的 SHA-256（推荐，仓库里不出现明文） */
+  passwordHash?: string;
+  /** 明文口令（兼容旧配置；优先用 passwordHash） */
   password?: string;
   placeholder?: string;
   button?: string;
@@ -15,13 +19,17 @@ export interface GateConfig {
 
 const STORAGE_KEY = 'our-story:gate';
 
+function expectedToken(gate?: GateConfig): string {
+  return (gate?.passwordHash || gate?.password || '').toLowerCase();
+}
+
 /** 口令 + 一个可爱的进入页；输对了才把站点放出来 */
 export function Gate({
   config,
   onUnlock,
   connection,
 }: {
-  config: Required<Pick<GateConfig, 'title' | 'hint' | 'password' | 'placeholder' | 'button' | 'wrong'>>;
+  config: GateConfig & { title: string; hint: string; placeholder: string; button: string; wrong: string };
   onUnlock: () => void;
   connection?: Connection;
 }) {
@@ -34,10 +42,17 @@ export function Gate({
     inputRef.current?.focus();
   }, []);
 
+  const matches = (input: string): boolean => {
+    const typed = input.trim();
+    if (!typed) return false;
+    if (config.passwordHash) return sha256Hex(typed) === config.passwordHash.toLowerCase();
+    return typed === (config.password ?? '');
+  };
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (value.trim() === config.password) {
-      localStorage.setItem(STORAGE_KEY, config.password);
+    if (matches(value)) {
+      localStorage.setItem(STORAGE_KEY, expectedToken(config));
       // 必须在点击手势里同步开始播放，iOS Safari 才允许出声
       kickMusic();
       setLeaving(true);
@@ -106,9 +121,11 @@ export function Gate({
 }
 
 export function gateNeeded(gate?: GateConfig): boolean {
-  if (!gate?.enabled || !gate.password) return false;
+  if (!gate?.enabled) return false;
+  const token = expectedToken(gate);
+  if (!token) return false;
   try {
-    return localStorage.getItem(STORAGE_KEY) !== gate.password;
+    return localStorage.getItem(STORAGE_KEY) !== token;
   } catch {
     return true;
   }

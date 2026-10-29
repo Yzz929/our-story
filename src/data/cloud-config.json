@@ -1,5 +1,5 @@
 {
-  "_说明": "Supabase 配置。anon/publishable key 是公开 key，提交进仓库是正常的；不要在这里放 secret/service_role key。",
+  "_说明": "Supabase 配置。anon/publishable key 是公开 key，提交进仓库是正常的；不要在这里放 secret/service_role key。口令只存 SHA-256 哈希，明文不落仓库、不落构建产物。",
   "url": "https://hyqpsbwcibrjaxgxglrf.supabase.co",
   "anonKey": "sb_publishable_vxt4CwXmqq3VBW7XKu3GvA_xNM6NVo4",
   "table": "site",
@@ -8,7 +8,7 @@
     "enabled": true,
     "title": "故事的开始",
     "hint": "输入我们的那一天",
-    "password": "20260512",
+    "passwordHash": "0b9e8f649a3f38a894167bdfbe27f6577ee3774e35f98b7af7486895507d19f9",
     "placeholder": "口令",
     "button": "进去看看",
     "wrong": "口令不对，再想想"
