@@ -23,3 +23,9 @@ dist-conn/
 # 预览截图和二维码卡片（本地产物，含真实姓名，不进公开仓库）
 docs/preview/
 docs/qr/
+
+# Capacitor 安卓工程的本地构建产物
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties

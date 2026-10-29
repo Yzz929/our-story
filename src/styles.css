@@ -137,7 +137,7 @@ a {
    ============================================================ */
 .nav {
   position: fixed;
-  inset: 12px 0 auto;
+  inset: calc(12px + env(safe-area-inset-top, 0px)) 0 auto;
   z-index: 50;
   display: flex;
   justify-content: center;
@@ -1823,7 +1823,7 @@ a {
 
 .gate-foot {
   position: absolute;
-  bottom: 26px;
+  bottom: calc(26px + env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
   text-align: center;
@@ -2329,5 +2329,12 @@ a {
   [data-reveal] {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* 原生壳 / PWA 独立窗口的安全区（刘海、底部小黑条） */
+@supports (padding: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
   }
 }

@@ -9,6 +9,7 @@ import { fillDays, toChineseNumber } from './lib/cn';
 import { loadDraft } from './lib/localDraft';
 import { useCloudSync } from './lib/useCloudSync';
 import { useConnection } from './lib/useConnection';
+import { initNativeUi, registerBackHandler } from './lib/native';
 import { Nav } from './components/Nav';
 import { Hero } from './components/Hero';
 import { Timeline } from './components/Timeline';
@@ -93,6 +94,35 @@ export default function App() {
     const id = window.setTimeout(() => saveData(data), 400);
     return () => window.clearTimeout(id);
   }, [data]);
+
+  // 原生壳：状态栏配色跟随主题，启动图在首屏渲染后收掉
+  useEffect(() => {
+    void initNativeUi(theme);
+  }, [theme]);
+
+  // 安卓物理返回键：先关大图，再从编辑页回首页，其余情况交给系统退出
+  useEffect(() => {
+    let dispose: (() => void) | undefined;
+    let cancelled = false;
+    void registerBackHandler(async () => {
+      if (lightbox) {
+        setLightbox(null);
+        return true;
+      }
+      if (route.startsWith('/edit')) {
+        window.location.hash = '#/';
+        return true;
+      }
+      return false;
+    }).then((fn) => {
+      if (cancelled) fn();
+      else dispose = fn;
+    });
+    return () => {
+      cancelled = true;
+      dispose?.();
+    };
+  }, [lightbox, route]);
 
   // 注意：unlocked / booting 变化会重新挂载整个站点，观察器必须跟着重新绑定，
   // 否则解锁后所有 data-reveal 元素会一直停在 opacity:0（整页空白）
