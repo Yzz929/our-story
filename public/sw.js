@@ -4,7 +4,7 @@
  * - 同源静态资源（js/css/照片/图标）：缓存优先 + 后台更新
  * - Supabase 接口：只走网络（数据必须实时）；公开存储的图片/音乐：缓存优先
  */
-const VERSION = 'our-story-v1.1.0';
+const VERSION = 'our-story-v1.2.0';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {

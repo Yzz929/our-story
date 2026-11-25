@@ -54,6 +54,12 @@ export const ChevronRight = (p: SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+export const ChevronDown = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}>
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+);
+
 export const Download = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}>
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />

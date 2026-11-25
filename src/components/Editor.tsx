@@ -4,7 +4,7 @@ import { fileToDataUrl } from '../lib/image';
 import { photoUrl } from '../lib/photo';
 import type { CloudSync } from '../lib/useCloudSync';
 import type { Connection } from '../lib/useConnection';
-import { ArrowDown, ArrowLeft, ArrowUp, Download, Plus, Trash, Upload } from './Icons';
+import { ArrowDown, ArrowLeft, ArrowUp, ChevronDown, Download, Plus, Trash, Upload } from './Icons';
 import { downloadJson, hasSaved, saveData, SAMPLE, storageBytes, uid } from '../data/store';
 import { cloudEnabled, probeCloud, uploadImage } from '../data/cloud';
 import type { Anniversary, Couple, GalleryItem, Milestone, SiteData } from '../data/types';
@@ -145,6 +145,12 @@ export function Editor({ data, onChange, onToast, cloudReady = true, sync, conne
     } catch {}
   }, [me]);
 
+  // 点点滴滴：默认全部折叠成一行（标题 + 日期），点左上角的箭头单独展开。
+  // 这里只是组件内的临时状态，退出编辑页（组件卸载）后自动回到全部折叠。
+  const [openIds, setOpenIds] = useState<string[]>([]);
+  const toggleOpen = (id: string) =>
+    setOpenIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
   const patch = (p: Partial<SiteData>) => onChange({ ...data, ...p });
   const patchCouple = (p: Partial<Couple>) => patch({ couple: { ...couple, ...p } });
 
@@ -161,8 +167,9 @@ export function Editor({ data, onChange, onToast, cloudReady = true, sync, conne
 
   const addMilestone = () => {
     const last = milestones[milestones.length - 1];
+    const id = uid();
     const m: Milestone = {
-      id: uid(),
+      id,
       date: last?.date ?? new Date().toISOString().slice(0, 10),
       title: '新的回忆',
       text: '',
@@ -171,6 +178,15 @@ export function Editor({ data, onChange, onToast, cloudReady = true, sync, conne
       author: me ?? undefined,
     };
     patch({ milestones: [...milestones, m] });
+    // 新增的这条要完整显示，并且滚到眼前、光标直接落在标题上
+    setOpenIds((prev) => [...prev, id]);
+    window.setTimeout(() => {
+      const el = document.getElementById(`ms-${id}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const input = el?.querySelector<HTMLInputElement>('[data-field="title"]');
+      input?.focus();
+      input?.select();
+    }, 80);
   };
 
   const addAnniversary = () => {
@@ -412,85 +428,123 @@ export function Editor({ data, onChange, onToast, cloudReady = true, sync, conne
             <h2 className="panel-title">
               点点滴滴 <small>{milestones.length} 条</small>
             </h2>
-            <button className="btn btn-primary btn-mini" onClick={addMilestone}>
-              <Plus /> 添加
-            </button>
+            <div className="panel-actions">
+              {openIds.length > 0 && (
+                <button className="btn btn-mini" onClick={() => setOpenIds([])}>
+                  全部收起
+                </button>
+              )}
+              <button className="btn btn-primary btn-mini" onClick={addMilestone}>
+                <Plus /> 添加
+              </button>
+            </div>
           </div>
           <div className="me-row">
             <span>我是</span>
             <AuthorPills value={me ?? undefined} boy={couple.boy} girl={couple.girl} onChange={(v) => setMe(v ?? null)} />
-            <span>新建的记录会默认记在 TA 名下</span>
+            <span>新建的记录会默认记在 TA 名下；点每条左上角的箭头可以展开编辑</span>
           </div>
-          {milestones.map((m, i) => (
-            <div className="editor-item" key={m.id}>
-              <div className="editor-item-head">
-                <span className="grow">{m.title || '未命名'}</span>
-                <time>{m.date}</time>
-                <button
-                  className="icon-btn"
-                  title="上移"
-                  onClick={() => patch({ milestones: move(milestones, i, -1) })}
-                >
-                  <ArrowUp />
-                </button>
-                <button
-                  className="icon-btn"
-                  title="下移"
-                  onClick={() => patch({ milestones: move(milestones, i, 1) })}
-                >
-                  <ArrowDown />
-                </button>
-                <button
-                  className="icon-btn"
-                  title="删除"
-                  onClick={() => {
-                    if (window.confirm(`删除「${m.title}」？`)) {
-                      patch({ milestones: milestones.filter((x) => x.id !== m.id) });
-                    }
-                  }}
-                >
-                  <Trash />
-                </button>
-              </div>
-              <div className="grid-2">
-                <div className="field">
-                  <label>日期</label>
-                  <input type="date" value={m.date} onChange={(e) => setMilestone(m.id, { date: e.target.value })} />
+          {milestones.map((m, i) => {
+            const open = openIds.includes(m.id);
+            return (
+              <div className={`editor-item ${open ? 'is-open' : 'is-closed'}`} key={m.id} id={`ms-${m.id}`}>
+                <div className="editor-item-head">
+                  <button
+                    type="button"
+                    className="fold-btn"
+                    aria-expanded={open}
+                    aria-controls={`ms-body-${m.id}`}
+                    aria-label={`${open ? '收起' : '展开'}「${m.title || '未命名'}」`}
+                    title={open ? '收起' : '展开'}
+                    onClick={() => toggleOpen(m.id)}
+                  >
+                    <ChevronDown />
+                  </button>
+                  <button type="button" className="ms-summary" onClick={() => toggleOpen(m.id)}>
+                    <span className="ms-title">{m.title || '未命名'}</span>
+                    <span className="ms-sub">
+                      <time>{m.date}</time>
+                      {m.tag ? <em>{m.tag}</em> : null}
+                      {m.author ? <em>{m.author === 'boy' ? couple.boy : couple.girl}</em> : null}
+                      {!!m.photos?.length && <em>{m.photos.length} 张照片</em>}
+                    </span>
+                  </button>
+                  <button
+                    className="icon-btn"
+                    title="上移"
+                    onClick={() => patch({ milestones: move(milestones, i, -1) })}
+                  >
+                    <ArrowUp />
+                  </button>
+                  <button
+                    className="icon-btn"
+                    title="下移"
+                    onClick={() => patch({ milestones: move(milestones, i, 1) })}
+                  >
+                    <ArrowDown />
+                  </button>
+                  <button
+                    className="icon-btn"
+                    title="删除"
+                    onClick={() => {
+                      if (window.confirm(`删除「${m.title}」？`)) {
+                        patch({ milestones: milestones.filter((x) => x.id !== m.id) });
+                        setOpenIds((prev) => prev.filter((x) => x !== m.id));
+                      }
+                    }}
+                  >
+                    <Trash />
+                  </button>
                 </div>
-                <div className="field">
-                  <label>标题</label>
-                  <input value={m.title} onChange={(e) => setMilestone(m.id, { title: e.target.value })} />
+
+                <div className="editor-item-body" id={`ms-body-${m.id}`} inert={!open}>
+                  <div className="editor-item-body-inner">
+                    <div className="grid-2">
+                      <div className="field">
+                        <label>日期</label>
+                        <input type="date" value={m.date} onChange={(e) => setMilestone(m.id, { date: e.target.value })} />
+                      </div>
+                      <div className="field">
+                        <label>标题</label>
+                        <input
+                          data-field="title"
+                          value={m.title}
+                          onChange={(e) => setMilestone(m.id, { title: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="field">
+                      <label>想说的话</label>
+                      <textarea value={m.text} onChange={(e) => setMilestone(m.id, { text: e.target.value })} />
+                    </div>
+                    <div className="grid-2">
+                      <div className="field">
+                        <label>标签</label>
+                        <input
+                          value={m.tag ?? ''}
+                          placeholder="初见 / 旅行 / 日常"
+                          onChange={(e) => setMilestone(m.id, { tag: e.target.value })}
+                        />
+                      </div>
+                      <div className="field">
+                        <label>谁写的（前端会显示 @名字）</label>
+                        <AuthorPills
+                          value={m.author}
+                          boy={couple.boy}
+                          girl={couple.girl}
+                          onChange={(next) => setMilestone(m.id, { author: next })}
+                        />
+                      </div>
+                    </div>
+                    <div className="field">
+                      <label>照片</label>
+                      <Thumbs photos={m.photos ?? []} onChange={(next) => setMilestone(m.id, { photos: next })} />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="field">
-                <label>想说的话</label>
-                <textarea value={m.text} onChange={(e) => setMilestone(m.id, { text: e.target.value })} />
-              </div>
-              <div className="grid-2">
-                <div className="field">
-                  <label>标签</label>
-                  <input
-                    value={m.tag ?? ''}
-                    placeholder="初见 / 旅行 / 日常"
-                    onChange={(e) => setMilestone(m.id, { tag: e.target.value })}
-                  />
-                </div>
-                <div className="field">
-                  <label>谁写的（前端会显示 @名字）</label>
-                  <AuthorPills
-                    value={m.author}
-                    boy={couple.boy}
-                    girl={couple.girl}
-                    onChange={(next) => setMilestone(m.id, { author: next })}
-                  />
-                </div>
-              </div>
-              <div className="field">
-                <label>照片</label>
-                <Thumbs photos={m.photos ?? []} onChange={(next) => setMilestone(m.id, { photos: next })} />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="panel">
